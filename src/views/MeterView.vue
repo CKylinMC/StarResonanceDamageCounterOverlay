@@ -11,26 +11,50 @@ const isDevelopment = computed(() => import.meta.env.DEV || import.meta.env.MODE
 
 const sortedData = computed(() => {
     const entries = Object.entries(data.value);
-    return entries
+    const sorted = entries
         .sort(([, a], [, b]) => b.total_damage.total - a.total_damage.total)
         .map(([uid, item]) => ({ uid, ...item }));
+    
+    // 计算总伤害
+    const totalTeamDamage = sorted.reduce((sum, player) => sum + player.total_damage.total, 0);
+    
+    // 为每个玩家添加伤害百分比
+    return sorted.map((player, index) => ({
+        ...player,
+        damagePercent: totalTeamDamage > 0 ? (player.total_damage.total / totalTeamDamage) * 100 : 0,
+        rank: index + 1
+    }));
 });
 
-const getRowBackgroundColor = (index: number, totalCount: number) => {
-    if (totalCount <= 1) return 'rgba(0, 0, 0, 0.1)';
+// 获取基于伤害百分比的进度条样式
+const getProgressBarStyle = (damagePercent: number, rank: number) => {
+    // 热-冷色彩方案：红色(热) → 蓝色(冷)
+    // 颜色映射：
+    // 第1名: 红色 (0°)   - 最热/最高伤害
+    // 第2名: 橙色 (~30°)
+    // 第3名: 黄色 (~60°) 
+    // 第4名: 黄绿 (~90°)
+    // 第5名: 绿色 (~120°)
+    // 第6名: 青绿 (~150°)
+    // 第7名: 青色 (~180°)
+    // 第8名: 蓝青 (~210°)
+    // 第9名+: 蓝色 (240°) - 最冷/最低伤害
     
-    const rankPercent = index / (totalCount - 1);
+    const totalPlayers = sortedData.value.length;
+    const hue = Math.min(240, 240 * (rank - 1) / Math.max(1, totalPlayers - 1)); // 从0(红)到240(蓝)
     
-    if (index === 0) {
-        return 'rgba(255, 215, 0, 0.15)';
-    } else if (index === 1 && totalCount > 2) {
-        return 'rgba(192, 192, 192, 0.12)';
-    } else if (index === 2 && totalCount > 3) {
-        return 'rgba(205, 127, 50, 0.1)';
-    } else {
-        const hue = 120 * (1 - rankPercent); 
-        return `hsla(${hue}, 60%, 50%, 0.08)`;
-    }
+    // 饱和度和亮度根据排名调整，让前几名更突出
+    const saturation = Math.max(70, 100 - rank * 3); // 前几名饱和度更高
+    const lightness = Math.max(45, 60 - rank * 1.5); // 前几名稍微亮一些
+    const alpha = 0.35; // 透明度
+    
+    return {
+        background: `linear-gradient(to right, 
+            hsla(${hue}, ${saturation}%, ${lightness}%, ${alpha}) 0%, 
+            hsla(${hue}, ${saturation}%, ${lightness}%, ${alpha}) ${damagePercent}%, 
+            rgba(0, 0, 0, 0.1) ${damagePercent}%, 
+            rgba(0, 0, 0, 0.1) 100%)`
+    };
 };
 
 const fetchData = async () => {
@@ -88,18 +112,21 @@ onUnmounted(() => {
                 </tr>
             </thead>
             <tbody>
-                <tr v-for="(player, index) in sortedData" :key="player.uid" 
-                    :style="{ backgroundColor: getRowBackgroundColor(index, sortedData.length) }"
+                <tr v-for="player in sortedData" :key="player.uid" 
+                    :style="getProgressBarStyle(player.damagePercent, player.rank)"
                     class="damage-row">
                     <td class="uid-cell">
-                        <span v-if="index === 0" class="rank-icon gold">👑</span>
-                        <span v-else-if="index === 1" class="rank-icon silver">🥈</span>
-                        <span v-else-if="index === 2" class="rank-icon bronze">🥉</span>
-                        <span v-else class="rank-number">{{ index + 1 }}</span>
+                        <span v-if="player.rank === 1" class="rank-icon gold">👑</span>
+                        <span v-else-if="player.rank === 2" class="rank-icon silver">🥈</span>
+                        <span v-else-if="player.rank === 3" class="rank-icon bronze">🥉</span>
+                        <span v-else class="rank-number">{{ player.rank }}</span>
                         {{ player.uid }}
                     </td>
                     <td class="dps-cell">{{ formatDPS(player.realtime_dps) }}</td>
-                    <td class="damage-cell">{{ formatNumber(player.total_damage.total) }}</td>
+                    <td class="damage-cell">
+                        {{ formatNumber(player.total_damage.total) }}
+                        <span class="damage-percent">({{ player.damagePercent.toFixed(1) }}%)</span>
+                    </td>
                     <td class="critical-cell">{{ formatNumber(player.total_damage.critical) }}</td>
                     <td class="lucky-cell">{{ formatNumber(player.total_damage.lucky) }}</td>
                 </tr>
@@ -208,9 +235,9 @@ onUnmounted(() => {
 }
 
 .damage-row:hover {
-    background-color: rgba(255, 255, 255, 0.1) !important;
     border-left: 3px solid rgba(255, 255, 255, 0.5);
     transform: translateX(2px);
+    box-shadow: 0 2px 8px rgba(0, 0, 0, 0.3);
 }
 
 .rank-icon {
@@ -219,15 +246,15 @@ onUnmounted(() => {
 }
 
 .rank-icon.gold {
-    filter: drop-shadow(0 0 3px #ffd700);
+    filter: drop-shadow(0 0 3px #ff0000); /* 红色光晕 - 对应第一名的红色 */
 }
 
 .rank-icon.silver {
-    filter: drop-shadow(0 0 2px #c0c0c0);
+    filter: drop-shadow(0 0 2px #ff8c00); /* 橙色光晕 - 对应第二名的橙色 */
 }
 
 .rank-icon.bronze {
-    filter: drop-shadow(0 0 2px #cd7f32);
+    filter: drop-shadow(0 0 2px #ffd700); /* 黄色光晕 - 对应第三名的黄色 */
 }
 
 .rank-number {
@@ -261,7 +288,14 @@ onUnmounted(() => {
     color: #FFD700;
     font-weight: bold;
     text-align: right;
-    min-width: 80px;
+    min-width: 110px; /* 增加宽度以容纳百分比 */
+}
+
+.damage-percent {
+    font-size: 10px;
+    color: rgba(255, 255, 255, 0.7);
+    margin-left: 5px;
+    font-weight: normal;
 }
 
 .critical-cell {
@@ -314,6 +348,15 @@ onUnmounted(() => {
     .critical-cell,
     .lucky-cell {
         min-width: 60px;
+    }
+    
+    .damage-cell {
+        min-width: 80px; /* 为百分比保留更多空间 */
+    }
+    
+    .damage-percent {
+        font-size: 9px;
+        margin-left: 3px;
     }
     
     .meter-table {
