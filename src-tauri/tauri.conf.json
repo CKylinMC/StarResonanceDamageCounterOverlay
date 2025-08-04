@@ -23,7 +23,7 @@
         "transparent": true,
         "minWidth": 250,
         "minHeight": 120,
-        "alwaysOnTop": false,
+        "alwaysOnTop": true,
         "shadow": false,
         "additionalBrowserArgs": "--disable-gpu"
       },
