@@ -9,6 +9,7 @@ export const alova = createAlova({
     requestAdapter: adapterFetch(),
     responded: response => response.json(),
     baseURL: serverPath(),
+    cacheFor: {GET:0},
 });
 
 const isDevelopment = import.meta.env.DEV || import.meta.env.MODE === 'development';

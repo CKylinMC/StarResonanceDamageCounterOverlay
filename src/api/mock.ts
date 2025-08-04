@@ -197,4 +197,4 @@ export const resetMockData = (): void => {
 };
 
 // 导出用于开发环境的标志
-export const IS_MOCK_MODE = true;
+export const IS_MOCK_MODE = false;
