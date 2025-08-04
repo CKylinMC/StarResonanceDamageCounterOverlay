@@ -15,10 +15,10 @@ const sortedData = computed(() => {
         .sort(([, a], [, b]) => b.total_damage.total - a.total_damage.total)
         .map(([uid, item]) => ({ uid, ...item }));
     
-    // 计算总伤害
+    
     const totalTeamDamage = sorted.reduce((sum, player) => sum + player.total_damage.total, 0);
     
-    // 为每个玩家添加伤害百分比
+    
     return sorted.map((player, index) => ({
         ...player,
         damagePercent: totalTeamDamage > 0 ? (player.total_damage.total / totalTeamDamage) * 100 : 0,
@@ -26,27 +26,27 @@ const sortedData = computed(() => {
     }));
 });
 
-// 获取基于伤害百分比的进度条样式
+
 const getProgressBarStyle = (damagePercent: number, rank: number) => {
-    // 热-冷色彩方案：红色(热) → 蓝色(冷)
-    // 颜色映射：
-    // 第1名: 红色 (0°)   - 最热/最高伤害
-    // 第2名: 橙色 (~30°)
-    // 第3名: 黄色 (~60°) 
-    // 第4名: 黄绿 (~90°)
-    // 第5名: 绿色 (~120°)
-    // 第6名: 青绿 (~150°)
-    // 第7名: 青色 (~180°)
-    // 第8名: 蓝青 (~210°)
-    // 第9名+: 蓝色 (240°) - 最冷/最低伤害
+    
+    
+    
+    
+    
+    
+    
+    
+    
+    
+    
     
     const totalPlayers = sortedData.value.length;
-    const hue = Math.min(240, 240 * (rank - 1) / Math.max(1, totalPlayers - 1)); // 从0(红)到240(蓝)
+    const hue = Math.min(240, 240 * (rank - 1) / Math.max(1, totalPlayers - 1)); 
     
-    // 饱和度和亮度根据排名调整，让前几名更突出
-    const saturation = Math.max(70, 100 - rank * 3); // 前几名饱和度更高
-    const lightness = Math.max(45, 60 - rank * 1.5); // 前几名稍微亮一些
-    const alpha = 0.35; // 透明度
+    
+    const saturation = Math.max(70, 100 - rank * 3); 
+    const lightness = Math.max(45, 60 - rank * 1.5); 
+    const alpha = 0.35; 
     
     return {
         background: `linear-gradient(to right, 
