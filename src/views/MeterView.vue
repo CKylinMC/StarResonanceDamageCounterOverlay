@@ -68,13 +68,13 @@ onUnmounted(() => {
 <div class="damage-meter">
     <div class="table-container">
         <table class="meter-table">
-            <thead>
-                <tr>
-                    <th>UID</th>
-                    <th>实时DPS</th>
-                    <th>总伤害</th>
-                    <th>暴击伤害</th>
-                    <th>幸运伤害</th>
+            <thead data-tauri-drag-region class="drag-header">
+                <tr data-tauri-drag-region>
+                    <th data-tauri-drag-region>UID</th>
+                    <th data-tauri-drag-region>实时DPS</th>
+                    <th data-tauri-drag-region>总伤害</th>
+                    <th data-tauri-drag-region>暴击伤害</th>
+                    <th data-tauri-drag-region>幸运伤害</th>
                 </tr>
             </thead>
             <tbody>
@@ -162,6 +162,27 @@ onUnmounted(() => {
     position: sticky;
     top: 0;
     z-index: 10;
+    cursor: move; /* 显示拖拽光标 */
+}
+
+/* Tauri 拖拽区域样式 */
+[data-tauri-drag-region] {
+    -webkit-app-region: drag;
+    /* app-region: drag; */ /* 注释掉以避免 CSS 验证警告 */
+    cursor: move;
+    user-select: none;
+    -webkit-user-select: none;
+    -moz-user-select: none;
+    -ms-user-select: none;
+}
+
+.drag-header {
+    background: linear-gradient(135deg, rgba(0, 0, 0, 0.6), rgba(0, 0, 0, 0.4));
+    border-bottom: 2px solid rgba(255, 255, 255, 0.3);
+}
+
+.drag-header:hover {
+    background: linear-gradient(135deg, rgba(0, 0, 0, 0.7), rgba(0, 0, 0, 0.5));
 }
 
 .meter-table tbody tr {
