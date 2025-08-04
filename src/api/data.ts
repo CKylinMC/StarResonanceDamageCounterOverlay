@@ -11,7 +11,6 @@ export const alova = createAlova({
     baseURL: serverPath(),
 });
 
-// 开发环境标志 - 可以通过环境变量控制
 const isDevelopment = import.meta.env.DEV || import.meta.env.MODE === 'development';
 const useMockData = isDevelopment && IS_MOCK_MODE;
 

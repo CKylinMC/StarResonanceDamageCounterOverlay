@@ -7,10 +7,8 @@ import DevTools from '../components/DevTools.vue';
 const data = ref<DPSBysUid>({});
 let intervalId: number | null = null;
 
-// 开发环境检查
 const isDevelopment = computed(() => import.meta.env.DEV || import.meta.env.MODE === 'development');
 
-// 按总伤害排序的计算属性
 const sortedData = computed(() => {
     const entries = Object.entries(data.value);
     return entries
@@ -18,7 +16,23 @@ const sortedData = computed(() => {
         .map(([uid, item]) => ({ uid, ...item }));
 });
 
-// 获取数据的函数
+const getRowBackgroundColor = (index: number, totalCount: number) => {
+    if (totalCount <= 1) return 'rgba(0, 0, 0, 0.1)';
+    
+    const rankPercent = index / (totalCount - 1);
+    
+    if (index === 0) {
+        return 'rgba(255, 215, 0, 0.15)';
+    } else if (index === 1 && totalCount > 2) {
+        return 'rgba(192, 192, 192, 0.12)';
+    } else if (index === 2 && totalCount > 3) {
+        return 'rgba(205, 127, 50, 0.1)';
+    } else {
+        const hue = 120 * (1 - rankPercent); 
+        return `hsla(${hue}, 60%, 50%, 0.08)`;
+    }
+};
+
 const fetchData = async () => {
     try {
         const response = await getData();
@@ -30,7 +44,6 @@ const fetchData = async () => {
     }
 };
 
-// 格式化数字显示
 const formatNumber = (num: number): string => {
     if (num >= 1000000) {
         return (num / 1000000).toFixed(1) + 'M';
@@ -40,7 +53,6 @@ const formatNumber = (num: number): string => {
     return num.toFixed(0);
 };
 
-// 格式化DPS显示（保留小数）
 const formatDPS = (num: number): string => {
     if (num >= 1000000) {
         return (num / 1000000).toFixed(2) + 'M';
@@ -51,9 +63,7 @@ const formatDPS = (num: number): string => {
 };
 
 onMounted(() => {
-    // 立即获取一次数据
     fetchData();
-    // 每200ms刷新一次数据
     intervalId = setInterval(fetchData, 200);
 });
 
@@ -78,8 +88,16 @@ onUnmounted(() => {
                 </tr>
             </thead>
             <tbody>
-                <tr v-for="player in sortedData" :key="player.uid">
-                    <td class="uid-cell">{{ player.uid }}</td>
+                <tr v-for="(player, index) in sortedData" :key="player.uid" 
+                    :style="{ backgroundColor: getRowBackgroundColor(index, sortedData.length) }"
+                    class="damage-row">
+                    <td class="uid-cell">
+                        <span v-if="index === 0" class="rank-icon gold">👑</span>
+                        <span v-else-if="index === 1" class="rank-icon silver">🥈</span>
+                        <span v-else-if="index === 2" class="rank-icon bronze">🥉</span>
+                        <span v-else class="rank-number">{{ index + 1 }}</span>
+                        {{ player.uid }}
+                    </td>
                     <td class="dps-cell">{{ formatDPS(player.realtime_dps) }}</td>
                     <td class="damage-cell">{{ formatNumber(player.total_damage.total) }}</td>
                     <td class="critical-cell">{{ formatNumber(player.total_damage.critical) }}</td>
@@ -89,7 +107,6 @@ onUnmounted(() => {
         </table>
     </div>
     
-    <!-- 开发工具 - 仅在开发环境显示 -->
     <DevTools v-if="isDevelopment" />
 </div>
 </template>
@@ -186,25 +203,51 @@ onUnmounted(() => {
 }
 
 .meter-table tbody tr {
-    background-color: rgba(0, 0, 0, 0.1);
-    transition: background-color 0.2s ease;
+    transition: all 0.3s ease;
+    border-left: 3px solid transparent;
 }
 
-.meter-table tbody tr:hover {
-    background-color: rgba(255, 255, 255, 0.1);
+.damage-row:hover {
+    background-color: rgba(255, 255, 255, 0.1) !important;
+    border-left: 3px solid rgba(255, 255, 255, 0.5);
+    transform: translateX(2px);
 }
 
-.meter-table tbody tr:nth-child(even) {
-    background-color: rgba(0, 0, 0, 0.15);
+.rank-icon {
+    margin-right: 5px;
+    font-size: 12px;
+}
+
+.rank-icon.gold {
+    filter: drop-shadow(0 0 3px #ffd700);
+}
+
+.rank-icon.silver {
+    filter: drop-shadow(0 0 2px #c0c0c0);
+}
+
+.rank-icon.bronze {
+    filter: drop-shadow(0 0 2px #cd7f32);
+}
+
+.rank-number {
+    display: inline-block;
+    min-width: 16px;
+    text-align: center;
+    color: rgba(255, 255, 255, 0.6);
+    font-size: 10px;
+    margin-right: 5px;
 }
 
 .uid-cell {
     font-family: 'Courier New', monospace;
     font-size: 11px;
-    max-width: 80px;
+    max-width: 100px; 
     overflow: hidden;
     text-overflow: ellipsis;
     white-space: nowrap;
+    display: flex;
+    align-items: center;
 }
 
 .dps-cell {
@@ -252,8 +295,18 @@ onUnmounted(() => {
     }
     
     .uid-cell {
-        max-width: 60px;
+        /* max-width: 120px; */
         font-size: 10px;
+    }
+    
+    .rank-icon {
+        font-size: 10px;
+        margin-right: 3px;
+    }
+    
+    .rank-number {
+        font-size: 9px;
+        margin-right: 3px;
     }
     
     .dps-cell,

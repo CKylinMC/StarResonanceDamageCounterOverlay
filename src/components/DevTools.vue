@@ -84,7 +84,6 @@ const resetData = () => {
 
 onMounted(() => {
   updatePlayerList();
-  // 每秒更新一次玩家列表
   setInterval(updatePlayerList, 1000);
 });
 </script>
