@@ -1,3 +1,5 @@
+![Screenshot](https://github.com/ckylinmc/StarResonanceDamageCounterOverlay/raw/main/assets/scrshot.png)
+
 # 星痕共鸣DPS计数器浮窗界面
 
 使用Tauri和Copilot制作，只是一个浮窗界面，不包含核心功能。
