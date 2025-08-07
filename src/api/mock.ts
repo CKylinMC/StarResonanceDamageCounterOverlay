@@ -55,6 +55,21 @@ const generateRandomDamageData = (): DPSItem => {
     const fightDuration = randomInt(30, 300); // 30秒到5分钟
     const totalDps = totalDamage / fightDuration;
     
+    // 生成治疗数据
+    const normalHealing = randomInt(20000, 100000);
+    const criticalHealing = randomInt(30000, 150000);
+    const luckyHealing = randomInt(10000, 50000);
+    const critLuckyHealing = randomInt(40000, 200000);
+    const totalHealing = normalHealing + criticalHealing + luckyHealing + critLuckyHealing;
+    
+    const realtimeHps = randomFloat(500, 8000);
+    const realtimeHpsMax = realtimeHps * randomFloat(1.2, 2.5);
+    const totalHps = totalHealing / fightDuration;
+    
+    // 随机职业
+    const professions = ['输出', '愈合', '坦克', '辅助', '未知'];
+    const profession = professions[randomInt(0, professions.length - 1)];
+    
     return {
         realtime_dps: realtimeDps,
         realtime_dps_max: realtimeDpsMax,
@@ -72,7 +87,20 @@ const generateRandomDamageData = (): DPSItem => {
             critical: criticalCount,
             lucky: luckyCount,
             total: totalCount
-        }
+        },
+        realtime_hps: realtimeHps,
+        realtime_hps_max: realtimeHpsMax,
+        total_hps: totalHps,
+        total_healing: {
+            normal: normalHealing,
+            critical: criticalHealing,
+            lucky: luckyHealing,
+            crit_lucky: critLuckyHealing,
+            hpLessen: 0, // 治疗不减血
+            total: totalHealing
+        },
+        taken_damage: randomInt(0, 10000),
+        profession: profession
     };
 };
 
@@ -131,6 +159,36 @@ const updateMockData = (): void => {
         
         // 重新计算总DPS
         currentData.total_dps = currentData.total_damage.total / 60; // 每秒伤害
+        
+        // 模拟治疗增长
+        const healingIncrease = randomInt(500, 2000);
+        const healingCritIncrease = randomInt(300, 1500);
+        const healingLuckyIncrease = randomInt(100, 800);
+        
+        // 更新治疗数据
+        currentData.total_healing.normal += randomInt(0, healingIncrease);
+        currentData.total_healing.critical += randomInt(0, healingCritIncrease);
+        currentData.total_healing.lucky += randomInt(0, healingLuckyIncrease);
+        currentData.total_healing.total = 
+            currentData.total_healing.normal + 
+            currentData.total_healing.critical + 
+            currentData.total_healing.lucky + 
+            currentData.total_healing.crit_lucky;
+        
+        // 更新实时HPS（模拟波动）
+        const hpsVariation = randomFloat(0.7, 1.3);
+        currentData.realtime_hps = Math.max(0, currentData.realtime_hps * hpsVariation);
+        
+        // 更新最大HPS
+        if (currentData.realtime_hps > currentData.realtime_hps_max) {
+            currentData.realtime_hps_max = currentData.realtime_hps;
+        }
+        
+        // 重新计算总HPS
+        currentData.total_hps = currentData.total_healing.total / 60;
+        
+        // 更新承受伤害
+        currentData.taken_damage += randomInt(0, 500);
     });
 };
 
@@ -197,4 +255,4 @@ export const resetMockData = (): void => {
 };
 
 // 导出用于开发环境的标志
-export const IS_MOCK_MODE = false;
+export const IS_MOCK_MODE = true;
