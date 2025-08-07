@@ -917,7 +917,7 @@ onUnmounted(() => {
     display: grid;
     grid-template-columns: repeat(4, 1fr);
     gap: 8px;
-    margin-bottom: 15px;
+    margin-bottom: 5px;
     height: 50px;
 }
 
@@ -938,6 +938,7 @@ onUnmounted(() => {
     backdrop-filter: blur(10px);
     position: relative;
     overflow: hidden;
+    height: 30px;
 }
 
 .compact-stat:hover {
@@ -997,8 +998,8 @@ onUnmounted(() => {
     justify-content: center;
     align-items: center;
     gap: 8px;
-    padding: 8px 12px;
-    margin-bottom: 15px;
+    padding: 4px 12px;
+    margin-bottom: 5px;
     background: linear-gradient(
         135deg,
         rgba(255, 255, 255, 0.1),
@@ -1343,7 +1344,7 @@ onUnmounted(() => {
 
     .compact-stats {
         gap: 6px;
-        margin-bottom: 12px;
+        margin-bottom: 6px;
         height: 50px;
     }
 
@@ -1365,7 +1366,7 @@ onUnmounted(() => {
 
     .detail-toggle {
         padding: 6px 10px;
-        margin-bottom: 12px;
+        margin-bottom: 6px;
     }
 
     .toggle-text {
