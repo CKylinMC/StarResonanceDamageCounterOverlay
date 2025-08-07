@@ -67,7 +67,7 @@ const generateRandomDamageData = (): DPSItem => {
     const totalHps = totalHealing / fightDuration;
     
     // 随机职业
-    const professions = ['输出', '愈合', '坦克', '辅助', '未知'];
+    const professions = ['射线', '冰矛', '居合', '月刃', '空枪', '重装', '鹰弓', '狼弓', '防盾', '光盾', '岩盾', '格挡', '协奏', '狂音', '愈合', '惩戒'];
     const profession = professions[randomInt(0, professions.length - 1)];
     
     return {

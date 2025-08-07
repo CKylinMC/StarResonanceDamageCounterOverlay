@@ -109,6 +109,31 @@ const formatDPS = (num: number): string => {
     return num.toFixed(1);
 };
 
+// 职业映射配置
+const professionConfig: Record<string, { type: string; role: string; color: string }> = {
+    '射线': { type: 'C', role: '法', color: '#ff9500' },   // 橙色
+    '冰矛': { type: 'C', role: '法', color: '#ff9500' },   // 橙色
+    '居合': { type: 'C', role: '近', color: '#ff9500' },   // 橙色
+    '月刃': { type: 'C', role: '近', color: '#ff9500' },   // 橙色
+    '空枪': { type: 'C', role: '近', color: '#ff9500' },   // 橙色
+    '重装': { type: 'C', role: '近', color: '#ff9500' },   // 橙色
+    '鹰弓': { type: 'C', role: '远', color: '#ff9500' },   // 橙色
+    '狼弓': { type: 'C', role: '远', color: '#ff9500' },   // 橙色
+    '防盾': { type: 'T', role: '坦', color: '#007acc' },   // 蓝色
+    '光盾': { type: 'T', role: '坦', color: '#007acc' },   // 蓝色
+    '岩盾': { type: 'T', role: '坦', color: '#007acc' },   // 蓝色
+    '格挡': { type: 'T', role: '坦', color: '#007acc' },   // 蓝色
+    '协奏': { type: 'N', role: '辅', color: '#22c55e' },   // 绿色
+    '狂音': { type: 'N', role: '辅', color: '#22c55e' },   // 绿色
+    '愈合': { type: 'N', role: '奶', color: '#22c55e' },   // 绿色
+    '惩戒': { type: 'N', role: '奶', color: '#22c55e' },   // 绿色
+};
+
+// 获取职业信息
+const getProfessionInfo = (profession: string) => {
+    return professionConfig[profession] || { type: '?', role: '未知', color: '#6b7280' };
+};
+
 onMounted(() => {
     fetchData();
     intervalId = setInterval(fetchData, 200);
@@ -126,7 +151,7 @@ onUnmounted(() => {
             <table class="meter-table">
                 <thead data-tauri-drag-region class="drag-header">
                     <tr data-tauri-drag-region>
-                        <th data-tauri-drag-region>UID</th>
+                        <th data-tauri-drag-region>职业 / UID</th>
                         <th data-tauri-drag-region>实时DPS</th>
                         <th data-tauri-drag-region>总伤害</th>
                         <th data-tauri-drag-region>暴击伤害</th>
@@ -164,7 +189,20 @@ onUnmounted(() => {
                                 <span v-else class="rank-number">{{
                                     player.rank
                                 }}</span>
-                                {{ player.uid }}
+                                <div class="uid-info">
+                                    <div class="profession-info">
+                                        <span 
+                                            class="profession-name"
+                                            :style="{ color: getProfessionInfo(player.profession || '未知').color }"
+                                        >
+                                            {{ player.profession || '未知' }}
+                                        </span>
+                                        <span class="profession-role">
+                                            {{ getProfessionInfo(player.profession || '未知').role }}
+                                        </span>
+                                    </div>
+                                    <div class="uid-text">{{ player.uid }}</div>
+                                </div>
                                 <span
                                     class="expand-indicator"
                                     :class="{
@@ -250,6 +288,59 @@ onUnmounted(() => {
                                             <div class="compact-value">
                                                 {{
                                                     formatDPS(player.total_dps)
+                                                }}
+                                            </div>
+                                        </div>
+                                        <!-- 治疗相关统计 -->
+                                        <div 
+                                            class="compact-stat" 
+                                            v-if="player.total_healing && player.total_healing.total > 0"
+                                        >
+                                            <div class="compact-label">
+                                                总治疗
+                                            </div>
+                                            <div class="compact-value healing">
+                                                {{
+                                                    formatNumber(player.total_healing.total)
+                                                }}
+                                            </div>
+                                        </div>
+                                        <div 
+                                            class="compact-stat" 
+                                            v-if="player.realtime_hps && player.realtime_hps > 0"
+                                        >
+                                            <div class="compact-label">
+                                                实时HPS
+                                            </div>
+                                            <div class="compact-value healing">
+                                                {{
+                                                    formatDPS(player.realtime_hps)
+                                                }}
+                                            </div>
+                                        </div>
+                                        <div 
+                                            class="compact-stat" 
+                                            v-if="player.total_hps && player.total_hps > 0"
+                                        >
+                                            <div class="compact-label">
+                                                总体HPS
+                                            </div>
+                                            <div class="compact-value healing">
+                                                {{
+                                                    formatDPS(player.total_hps)
+                                                }}
+                                            </div>
+                                        </div>
+                                        <div 
+                                            class="compact-stat" 
+                                            v-if="player.taken_damage && player.taken_damage > 0"
+                                        >
+                                            <div class="compact-label">
+                                                承受伤害
+                                            </div>
+                                            <div class="compact-value taken-damage">
+                                                {{
+                                                    formatNumber(player.taken_damage)
                                                 }}
                                             </div>
                                         </div>
@@ -430,6 +521,70 @@ onUnmounted(() => {
                                                             ).toFixed(1)
                                                         }}%)</span
                                                     >
+                                                </div>
+                                            </div>
+                                        </div>
+
+                                        <!-- 治疗统计 -->
+                                        <div
+                                            class="detail-section healing-section"
+                                            v-if="player.total_healing && player.total_healing.total > 0"
+                                        >
+                                            <h4>
+                                                <span class="icon">💚</span>
+                                                治疗分布
+                                            </h4>
+                                            <div class="data-grid">
+                                                <div class="data-item">
+                                                    <span class="label">普通治疗</span>
+                                                    <span class="value normal">{{
+                                                        formatNumber(player.total_healing.normal)
+                                                    }}</span>
+                                                    <span class="percent">({{
+                                                        player.total_healing.total > 0 
+                                                            ? ((player.total_healing.normal / player.total_healing.total) * 100).toFixed(1)
+                                                            : '0'
+                                                    }}%)</span>
+                                                </div>
+                                                <div class="data-item">
+                                                    <span class="label">暴击治疗</span>
+                                                    <span class="value critical">{{
+                                                        formatNumber(player.total_healing.critical)
+                                                    }}</span>
+                                                    <span class="percent">({{
+                                                        player.total_healing.total > 0 
+                                                            ? ((player.total_healing.critical / player.total_healing.total) * 100).toFixed(1)
+                                                            : '0'
+                                                    }}%)</span>
+                                                </div>
+                                                <div class="data-item">
+                                                    <span class="label">幸运治疗</span>
+                                                    <span class="value lucky">{{
+                                                        formatNumber(player.total_healing.lucky)
+                                                    }}</span>
+                                                    <span class="percent">({{
+                                                        player.total_healing.total > 0 
+                                                            ? ((player.total_healing.lucky / player.total_healing.total) * 100).toFixed(1)
+                                                            : '0'
+                                                    }}%)</span>
+                                                </div>
+                                                <div class="data-item">
+                                                    <span class="label">暴击幸运治疗</span>
+                                                    <span class="value crit-lucky">{{
+                                                        formatNumber(player.total_healing.crit_lucky)
+                                                    }}</span>
+                                                    <span class="percent">({{
+                                                        player.total_healing.total > 0 
+                                                            ? ((player.total_healing.crit_lucky / player.total_healing.total) * 100).toFixed(1)
+                                                            : '0'
+                                                    }}%)</span>
+                                                </div>
+                                                <div class="data-item total-item">
+                                                    <span class="label">总治疗量</span>
+                                                    <span class="value total">{{
+                                                        formatNumber(player.total_healing.total)
+                                                    }}</span>
+                                                    <span class="percent">100%</span>
                                                 </div>
                                             </div>
                                         </div>
@@ -763,7 +918,7 @@ onUnmounted(() => {
     grid-template-columns: repeat(4, 1fr);
     gap: 8px;
     margin-bottom: 15px;
-    height: 35px;
+    height: 50px;
 }
 
 .compact-stat {
@@ -816,6 +971,14 @@ onUnmounted(() => {
     color: #ffd700;
     line-height: 1;
     text-shadow: 1px 1px 2px rgba(0, 0, 0, 0.8);
+}
+
+.compact-value.healing {
+    color: #22c55e;
+}
+
+.compact-value.taken-damage {
+    color: #ef4444;
 }
 
 .compact-percent {
@@ -904,6 +1067,10 @@ onUnmounted(() => {
 
 .detail-section.damage-section {
     border-left: 3px solid #ff6b6b;
+}
+
+.detail-section.healing-section {
+    border-left: 3px solid #22c55e;
 }
 
 .detail-section.attack-section {
@@ -1038,12 +1205,49 @@ onUnmounted(() => {
 .uid-cell {
     font-family: 'Courier New', monospace;
     font-size: 11px;
-    max-width: 100px;
+    max-width: 140px;
     overflow: hidden;
     text-overflow: ellipsis;
     white-space: nowrap;
     display: flex;
     align-items: center;
+    gap: 6px;
+}
+
+.uid-info {
+    display: flex;
+    flex-direction: column;
+    gap: 2px;
+    flex: 1;
+    min-width: 0;
+}
+
+.profession-info {
+    display: flex;
+    align-items: center;
+    gap: 4px;
+    font-size: 10px;
+}
+
+.profession-name {
+    font-weight: bold;
+    font-size: 10px;
+}
+
+.profession-role {
+    color: rgba(255, 255, 255, 0.6);
+    font-size: 9px;
+    background: rgba(255, 255, 255, 0.1);
+    padding: 1px 4px;
+    border-radius: 8px;
+}
+
+.uid-text {
+    font-size: 10px;
+    color: rgba(255, 255, 255, 0.8);
+    overflow: hidden;
+    text-overflow: ellipsis;
+    white-space: nowrap;
 }
 
 .dps-cell {
@@ -1140,7 +1344,7 @@ onUnmounted(() => {
     .compact-stats {
         gap: 6px;
         margin-bottom: 12px;
-        height: 32px;
+        height: 50px;
     }
 
     .compact-stat {
